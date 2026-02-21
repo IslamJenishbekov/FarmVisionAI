@@ -38,3 +38,31 @@ class AskQuestionParams(BaseModel):
                 if not isinstance(key, str) or not isinstance(val, str):
                     raise ValueError("history dict keys/values must be strings")
         return value
+
+
+def parse_add_info(value: Any) -> dict[str, Any]:
+    """Parse add_info JSON into a dict with dynamic keys."""
+
+    if value is None or value == "":
+        return {}
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError("add_info must be valid JSON") from exc
+    else:
+        parsed = value
+    if not isinstance(parsed, dict):
+        raise ValueError("add_info must be a JSON object")
+    return parsed
+
+
+class AnalyzeResponse(BaseModel):
+    """Response model for cow image analysis."""
+
+    cows_num: int = 0
+    ill_cow: list[list[int]] = Field(default_factory=list)
+    hunter: list[list[int]] = Field(default_factory=list)
+    thief: list[list[int]] = Field(default_factory=list)
+    pregnant: list[list[int]] = Field(default_factory=list)
+    info: dict[str, Any] = Field(default_factory=dict)
