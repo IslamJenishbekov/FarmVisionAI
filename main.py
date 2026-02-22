@@ -5,7 +5,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from threading import Lock
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
 from PIL import Image, UnidentifiedImageError
 
 from ai_services.computer_vision import analyze_cows
@@ -49,15 +49,40 @@ def ask_question(params: AskQuestionParams = Depends()) -> dict[str, str]:
 
 @app.get("/analyze", response_model=AnalyzeResponse)
 @app.post("/analyze", response_model=AnalyzeResponse)
-def analyze(
-    image: UploadFile = File(...),
-    add_info: str | None = Form(None),
-) -> AnalyzeResponse:
+async def analyze(request: Request) -> AnalyzeResponse:
     """Analyze a cow image with optional extra metadata."""
 
     with single_flight(_ANALYZE_REQUEST_LOCK):
         try:
-            add_info_payload = parse_add_info(add_info)
+            form = await request.form(max_part_size=5 * 1024 * 1024)
+        except HTTPException as exc:
+            raise exc
+        except Exception as exc:  # pragma: no cover - defensive
+            raise HTTPException(
+                status_code=400, detail="Invalid multipart form data"
+            ) from exc
+
+        image = form.get("image")
+        if image is None:
+            raise HTTPException(
+                status_code=422,
+                detail=[
+                    {
+                        "type": "missing",
+                        "loc": ["body", "image"],
+                        "msg": "Field required",
+                        "input": None,
+                    }
+                ],
+            )
+        if not isinstance(image, UploadFile):
+            raise HTTPException(
+                status_code=400, detail="image must be sent as a file upload"
+            )
+
+        add_info_raw = form.get("add_info")
+        try:
+            add_info_payload = parse_add_info(add_info_raw)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 

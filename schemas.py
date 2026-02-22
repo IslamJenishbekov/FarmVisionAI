@@ -53,10 +53,6 @@ def parse_add_info(value: Any) -> list[dict[str, Any]]:
     else:
         parsed = value
 
-    # Compatibility path: accept a single object and normalize to a one-item list.
-    if isinstance(parsed, dict):
-        parsed = [parsed]
-
     if not isinstance(parsed, list):
         raise ValueError("add_info must be a JSON array of objects")
     if not all(isinstance(item, dict) for item in parsed):
