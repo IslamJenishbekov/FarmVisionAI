@@ -96,13 +96,14 @@ curl -X GET "http://127.0.0.1:8000/analyze" \
   "ill_cow": [],
   "hunter": [[x1, x2, y1, y2], ...],
   "thief": [[x1, x2, y1, y2], ...],
-  "pregnant": [],
+  "pregnant": [[x1, x2, y1, y2], ...],
   "info": {}
 }
 ```
 
 Маппинг классов (YOLO):
 - `cow` → `cows_num`
+- `cow` → `pregnant` (список боксов коров)
 - `wolf` → `hunter` (список боксов)
 - `person` → `thief` (список боксов)
 

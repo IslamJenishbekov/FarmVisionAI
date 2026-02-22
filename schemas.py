@@ -61,7 +61,10 @@ def parse_add_info(value: Any) -> list[dict[str, Any]]:
 
 
 class AnalyzeResponse(BaseModel):
-    """Response model for cow image analysis."""
+    """Response model for cow image analysis.
+
+    Field pregnant contains bounding boxes for all detected cows.
+    """
 
     cows_num: int = 0
     ill_cow: list[list[int]] = Field(default_factory=list)

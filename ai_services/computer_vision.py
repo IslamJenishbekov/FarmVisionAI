@@ -116,6 +116,6 @@ def analyze_cows(
         ill_cow=[],
         hunter=boxes_by_label["wolf"],
         thief=boxes_by_label["person"],
-        pregnant=[],
+        pregnant=boxes_by_label["cow"],
         info={},
     )
