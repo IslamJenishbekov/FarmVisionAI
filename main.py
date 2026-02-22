@@ -7,6 +7,7 @@ from threading import Lock
 
 from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
 from PIL import Image, UnidentifiedImageError
+from starlette.datastructures import UploadFile as StarletteUploadFile
 
 from ai_services.computer_vision import analyze_cows
 from ai_services.llm import GeminiClientError, generate_llm_answer
@@ -75,7 +76,7 @@ async def analyze(request: Request) -> AnalyzeResponse:
                     }
                 ],
             )
-        if not isinstance(image, UploadFile):
+        if not isinstance(image, (UploadFile, StarletteUploadFile)):
             raise HTTPException(
                 status_code=400, detail="image must be sent as a file upload"
             )

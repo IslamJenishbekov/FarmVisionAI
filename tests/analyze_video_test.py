@@ -111,7 +111,7 @@ def _request_frame(
 
     files = {"image": ("frame.jpg", encoded.tobytes(), "image/jpeg")}
     data = {"add_info": json.dumps(add_info, ensure_ascii=False)}
-    return requests.request("GET", url, files=files, data=data, timeout=timeout)
+    return requests.post(url, files=files, data=data, timeout=timeout)
 
 
 def main() -> int:
