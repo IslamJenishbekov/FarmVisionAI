@@ -40,8 +40,8 @@ class AskQuestionParams(BaseModel):
         return value
 
 
-def parse_add_info(value: Any) -> dict[str, Any]:
-    """Parse add_info JSON into a dict with dynamic keys."""
+def parse_add_info(value: Any) -> list[dict[str, Any]]:
+    """Parse add_info JSON into a list of dictionaries."""
 
     if value is None or value == "":
         return {}
@@ -52,8 +52,10 @@ def parse_add_info(value: Any) -> dict[str, Any]:
             raise ValueError("add_info must be valid JSON") from exc
     else:
         parsed = value
-    if not isinstance(parsed, dict):
-        raise ValueError("add_info must be a JSON object")
+    if not isinstance(parsed, list):
+        raise ValueError("add_info must be a JSON array of objects")
+    if not all(isinstance(item, dict) for item in parsed):
+        raise ValueError("add_info items must be objects")
     return parsed
 
 

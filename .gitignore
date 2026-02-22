@@ -4,3 +4,5 @@
 *.pyc
 backup
 data
+runs
+train/datasets
