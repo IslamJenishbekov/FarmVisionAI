@@ -20,16 +20,18 @@ BOX_COLORS = {
 }
 
 
-def _parse_add_info(raw: str) -> dict[str, Any]:
+def _parse_add_info(raw: str) -> list[dict[str, Any]]:
     """Parse add_info JSON from CLI."""
 
     try:
         value: Any = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise ValueError("add_info must be valid JSON") from exc
-    if not isinstance(value, dict):
-        raise ValueError("add_info must be a JSON object")
-    return value
+    if isinstance(value, dict):
+        return [value]
+    if isinstance(value, list) and all(isinstance(item, dict) for item in value):
+        return value
+    raise ValueError("add_info must be a JSON object or array of objects")
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -54,8 +56,8 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--add-info-json",
-        default="{}",
-        help="add_info as JSON object (default: {}).",
+        default="[]",
+        help="add_info as JSON array/object (default: []).",
     )
     parser.add_argument(
         "--output-dir",
@@ -100,7 +102,7 @@ def _save_json(path: Path, payload: Any) -> None:
 def _request_frame(
     url: str,
     frame,
-    add_info: dict[str, Any],
+    add_info: list[dict[str, Any]],
     timeout: int,
 ) -> requests.Response:
     success, encoded = cv2.imencode(".jpg", frame)

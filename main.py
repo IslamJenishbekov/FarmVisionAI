@@ -13,14 +13,15 @@ from ai_services.llm import GeminiClientError, generate_llm_answer
 from schemas import AnalyzeResponse, AskQuestionParams, parse_add_info
 
 app = FastAPI(title="Farm LLM Assistant")
-_REQUEST_LOCK = Lock()
+_ASK_REQUEST_LOCK = Lock()
+_ANALYZE_REQUEST_LOCK = Lock()
 
 
 @contextmanager
-def single_flight() -> None:
+def single_flight(lock: Lock) -> None:
     """Allow only one request at a time for guarded endpoints."""
 
-    if not _REQUEST_LOCK.acquire(blocking=False):
+    if not lock.acquire(blocking=False):
         raise HTTPException(
             status_code=429,
             detail="Service is busy processing another request. Try again later.",
@@ -28,14 +29,14 @@ def single_flight() -> None:
     try:
         yield
     finally:
-        _REQUEST_LOCK.release()
+        lock.release()
 
 
 @app.get("/ask-question")
 def ask_question(params: AskQuestionParams = Depends()) -> dict[str, str]:
     """Return an LLM answer to the farmer's question."""
 
-    with single_flight():
+    with single_flight(_ASK_REQUEST_LOCK):
         try:
             answer = generate_llm_answer(params.history, params.user_text)
         except ValueError as exc:
@@ -47,13 +48,14 @@ def ask_question(params: AskQuestionParams = Depends()) -> dict[str, str]:
 
 
 @app.get("/analyze", response_model=AnalyzeResponse)
+@app.post("/analyze", response_model=AnalyzeResponse)
 def analyze(
     image: UploadFile = File(...),
     add_info: str | None = Form(None),
 ) -> AnalyzeResponse:
     """Analyze a cow image with optional extra metadata."""
 
-    with single_flight():
+    with single_flight(_ANALYZE_REQUEST_LOCK):
         try:
             add_info_payload = parse_add_info(add_info)
         except ValueError as exc:
